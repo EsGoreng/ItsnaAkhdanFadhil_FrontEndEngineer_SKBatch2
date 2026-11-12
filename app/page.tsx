@@ -1,68 +1,116 @@
-import Image from "next/image";
+import { RoleExplorer } from "@/components/RoleExplorer";
+import {
+  Compass,
+  CheckCircle,
+  HelpCircle,
+  Layers,
+} from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary selection:text-primary-foreground">
+      <main className="flex-1">
+        {/* The Role Explorer Component Container */}
+        <div id="explorer">
+          <RoleExplorer />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* Product Reasoning & Brief Execution Rationale Section */}
+        <section
+          id="reasoning"
+          className="border-t border-border bg-muted/30 py-12 sm:py-16"
+        >
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge variant="secondary">
+                Product Thinking &amp; Design Decisions
+              </Badge>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-4">
+              Alasan Desain &amp; Eksekusi Solusi Praktis
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
+              Sesuai dengan instruksi assignment, solusi difokuskan pada pemecahan masalah produk secara praktis, ketelitian mengeksekusi brief, dan kejelasan reasoning:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Card 1: Default & Filter State */}
+              <Card>
+                <CardHeader className="p-5 pb-2">
+                  <div className="size-9 rounded-xl bg-accent flex items-center justify-center text-primary mb-3">
+                    <Compass className="size-5" />
+                  </div>
+                  <CardTitle className="text-base font-bold">
+                    1. State Default &amp; Filter
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 pt-0">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Semua peran dimuat secara default dengan pill count aktif. Filter per departemen menggunakan horizontal scrollable pill bar di mobile dan wrap flex di desktop.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Empty State & Recovery */}
+              <Card>
+                <CardHeader className="p-5 pb-2">
+                  <div className="size-9 rounded-xl bg-accent flex items-center justify-center text-amber-600 dark:text-amber-400 mb-3">
+                    <HelpCircle className="size-5" />
+                  </div>
+                  <CardTitle className="text-base font-bold">
+                    2. Empty State Recovery
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 pt-0">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Departemen <em>&ldquo;Legal &amp; Compliance&rdquo;</em> sengaja memiliki 0 peran agar reviewer bisa menguji empty state secara instan dengan 1 klik dan reset langsung.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Card Scannability & Responsiveness */}
+              <Card>
+                <CardHeader className="p-5 pb-2">
+                  <div className="size-9 rounded-xl bg-accent flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3">
+                    <CheckCircle className="size-5" />
+                  </div>
+                  <CardTitle className="text-base font-bold">
+                    3. Hierarki &amp; Detail Modal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 pt-0">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Setiap kartu menyajikan info krusial (departemen, level, tipe, lokasi, skill chip). Tombol &ldquo;Detail Peran&rdquo; membuka modal lengkap dengan keyboard ESC support.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card 4: Lazy Load & Skeleton Feedback */}
+              <Card>
+                <CardHeader className="p-5 pb-2">
+                  <div className="size-9 rounded-xl bg-accent flex items-center justify-center text-primary mb-3">
+                    <Layers className="size-5" />
+                  </div>
+                  <CardTitle className="text-base font-bold">
+                    4. Lazy Load &amp; Skeleton
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 pt-0">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Saat item peran berjumlah banyak, sistem memuat per batch 6 kartu menggunakan IntersectionObserver disertai skeleton placeholder animasi pulse yang halus.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
