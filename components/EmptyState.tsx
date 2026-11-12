@@ -7,18 +7,20 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 
 interface EmptyStateProps {
-  selectedDepartment: Department;
+  selectedDepartments: Department[];
   searchQuery: string;
   onResetFilters: () => void;
 }
 
 export function EmptyState({
-  selectedDepartment,
+  selectedDepartments,
   searchQuery,
   onResetFilters,
 }: EmptyStateProps) {
+  const activeDepartments = selectedDepartments.filter((d) => d !== "Semua");
   const isSearchActive = searchQuery.trim().length > 0;
-  const isDeptFilterActive = selectedDepartment !== "Semua";
+  const isDeptFilterActive = activeDepartments.length > 0;
+  const deptText = activeDepartments.join(", ");
 
   return (
     <Card className="flex flex-col items-center justify-center text-center p-8 sm:p-12 border-dashed max-w-2xl mx-auto my-6">
@@ -41,7 +43,7 @@ export function EmptyState({
             <>
               Tidak ada lowongan di departemen{" "}
               <span className="font-semibold text-foreground">
-                &ldquo;{selectedDepartment}&rdquo;
+                &ldquo;{deptText}&rdquo;
               </span>{" "}
               yang cocok dengan kata kunci{" "}
               <span className="font-semibold text-foreground">
@@ -61,7 +63,7 @@ export function EmptyState({
             <>
               Saat ini belum ada posisi terbuka untuk departemen{" "}
               <span className="font-semibold text-foreground">
-                &ldquo;{selectedDepartment}&rdquo;
+                &ldquo;{deptText}&rdquo;
               </span>
               . Tim kami terus membuka peluang baru setiap bulannya.
             </>

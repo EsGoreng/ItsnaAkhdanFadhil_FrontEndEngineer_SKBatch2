@@ -10,38 +10,38 @@ import { Separator } from "@/components/ui/separator";
 
 export function RoleCardSkeleton() {
   return (
-    <Card aria-hidden="true" className="flex flex-col justify-between min-h-[340px]">
+    <Card aria-hidden="true" className="h-full flex flex-col justify-between relative overflow-hidden">
       <div>
-        <CardHeader className="pb-3 flex flex-col gap-2">
+        <CardHeader className="p-4 sm:p-5 pb-2.5 sm:pb-3">
           {/* Top Header Row (Department Badge & Date) */}
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 mb-1">
             <Skeleton className="h-5 w-24 rounded-full" />
-            <Skeleton className="h-3.5 w-16" />
+            <Skeleton className="h-4 w-20 rounded" />
           </div>
 
           {/* Title Lines */}
-          <div className="flex flex-col gap-2 pt-1">
-            <Skeleton className="h-5 w-4/5" />
-            <Skeleton className="h-5 w-3/5" />
+          <div className="flex flex-col gap-1.5 pt-1">
+            <Skeleton className="h-5 w-4/5 rounded-md" />
+            <Skeleton className="h-5 w-3/5 rounded-md" />
           </div>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="p-4 sm:p-5 pt-0 sm:pt-0 flex flex-col gap-3 sm:gap-3.5">
           {/* Metadata info (Location & Level) */}
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-3.5 w-24" />
-            <Skeleton className="h-3.5 w-28" />
+          <div className="flex items-center gap-3 sm:gap-4 text-xs">
+            <Skeleton className="h-4 w-24 rounded" />
+            <Skeleton className="h-4 w-28 rounded" />
           </div>
 
           {/* Role Summary Lines */}
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-11/12" />
-            <Skeleton className="h-3 w-3/4" />
+          <div className="flex flex-col gap-2 pt-0.5">
+            <Skeleton className="h-3.5 w-full rounded" />
+            <Skeleton className="h-3.5 w-11/12 rounded" />
+            <Skeleton className="h-3.5 w-3/4 rounded" />
           </div>
 
           {/* Skills Tag List */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
             <Skeleton className="h-5 w-16 rounded-full" />
             <Skeleton className="h-5 w-20 rounded-full" />
             <Skeleton className="h-5 w-14 rounded-full" />
@@ -52,9 +52,9 @@ export function RoleCardSkeleton() {
 
       <div>
         <Separator />
-        <CardFooter className="pt-4 flex items-center justify-between">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-8 w-24 rounded-lg" />
+        <CardFooter className="p-4 sm:p-5 pt-3 sm:pt-4 flex items-center justify-between gap-2">
+          <Skeleton className="h-4 w-24 sm:w-28 rounded" />
+          <Skeleton className="h-8 w-20 sm:w-24 rounded-lg" />
         </CardFooter>
       </div>
     </Card>

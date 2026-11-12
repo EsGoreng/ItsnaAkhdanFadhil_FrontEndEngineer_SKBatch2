@@ -17,7 +17,7 @@ import { motion, AnimatePresence, MotionConfig } from "motion/react";
 const BATCH_SIZE = 6;
 
 export function RoleExplorer() {
-  const [selectedDepartment, setSelectedDepartment] = useState<Department>("Semua");
+  const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("Semua");
   const [activeModalRole, setActiveModalRole] = useState<Role | null>(null);
@@ -27,6 +27,31 @@ export function RoleExplorer() {
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [isFiltering, setIsFiltering] = useState<boolean>(false);
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
+
+  // Department selection handlers (multi-select)
+  const handleToggleDepartment = useCallback((dept: Department) => {
+    if (dept === "Semua") {
+      setSelectedDepartments([]);
+      return;
+    }
+    setSelectedDepartments((prev) => {
+      const withoutSemua = prev.filter((d) => d !== "Semua");
+      if (withoutSemua.includes(dept)) {
+        return withoutSemua.filter((d) => d !== dept);
+      } else {
+        return [...withoutSemua, dept];
+      }
+    });
+  }, []);
+
+  const handleClearDepartments = useCallback(() => {
+    setSelectedDepartments([]);
+  }, []);
+
+  const activeDepartments = useMemo(
+    () => selectedDepartments.filter((d) => d !== "Semua"),
+    [selectedDepartments]
+  );
 
   // Compute total counts per department from raw mock data
   const departmentCounts = useMemo(() => {
@@ -50,11 +75,11 @@ export function RoleExplorer() {
     return counts;
   }, []);
 
-  // Filter roles based on selected department, search query, and level
+  // Filter roles based on selected departments (multi-select), search query, and level
   const filteredRoles = useMemo(() => {
     return MOCK_ROLES.filter((role) => {
-      // 1. Department filter
-      if (selectedDepartment !== "Semua" && role.department !== selectedDepartment) {
+      // 1. Multi-department filter
+      if (activeDepartments.length > 0 && !activeDepartments.includes(role.department)) {
         return false;
       }
 
@@ -79,7 +104,7 @@ export function RoleExplorer() {
 
       return true;
     });
-  }, [selectedDepartment, searchQuery, selectedLevel]);
+  }, [activeDepartments, searchQuery, selectedLevel]);
 
   // When filters or search change, simulate smooth loading state & reset visible count
   useEffect(() => {
@@ -89,7 +114,7 @@ export function RoleExplorer() {
       setIsFiltering(false);
     }, 280);
     return () => clearTimeout(timer);
-  }, [selectedDepartment, searchQuery, selectedLevel]);
+  }, [selectedDepartments, searchQuery, selectedLevel]);
 
   // Sliced roles currently visible
   const visibleRoles = useMemo(() => {
@@ -137,21 +162,32 @@ export function RoleExplorer() {
   }, [hasMore, isLoadingMore, isFiltering, handleLoadMore]);
 
   const isFilteringActive =
-    selectedDepartment !== "Semua" || searchQuery.trim() !== "" || selectedLevel !== "Semua";
+    activeDepartments.length > 0 || searchQuery.trim() !== "" || selectedLevel !== "Semua";
 
   const handleResetFilters = () => {
-    setSelectedDepartment("Semua");
+    setSelectedDepartments([]);
     setSearchQuery("");
     setSelectedLevel("Semua");
   };
+
+  const headerTitle = useMemo(() => {
+    if (activeDepartments.length === 0) {
+      return "Semua Lowongan Peran";
+    }
+    if (activeDepartments.length === 1) {
+      return `Departemen: ${activeDepartments[0]}`;
+    }
+    return `${activeDepartments.length} Departemen Terpilih`;
+  }, [activeDepartments]);
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Sidebar Filter Component */}
         <RoleSidebar
-          selectedDepartment={selectedDepartment}
-          onSelectDepartment={setSelectedDepartment}
+          selectedDepartments={selectedDepartments}
+          onToggleDepartment={handleToggleDepartment}
+          onClearDepartments={handleClearDepartments}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedLevel={selectedLevel}
@@ -169,9 +205,7 @@ export function RoleExplorer() {
           <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
             <div className="flex items-center gap-2.5">
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                {selectedDepartment === "Semua"
-                  ? "Semua Lowongan Peran"
-                  : `Departemen: ${selectedDepartment}`}
+                {headerTitle}
               </h2>
               <Badge variant="secondary" className="px-2.5 py-0.5 font-semibold">
                 {filteredRoles.length} posisi
@@ -180,41 +214,43 @@ export function RoleExplorer() {
           </div>
 
           {/* Cards Grid: Skeletons, Actual Cards, or Empty State */}
-          {isFiltering ? (
-            // Skeleton state during filter / search transition
-            <MotionConfig reducedMotion="user">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Array.from({ length: Math.min(BATCH_SIZE, filteredRoles.length || BATCH_SIZE) }).map((_, index) => (
-                  <motion.div
-                    key={`filter-skeleton-${index}`}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, delay: index * 0.04 }}
-                    className="h-full"
-                  >
-                    <RoleCardSkeleton />
-                  </motion.div>
-                ))}
-              </div>
-            </MotionConfig>
-          ) : filteredRoles.length > 0 ? (
-            <div className="flex flex-col gap-8">
-              {/* Card Grid with Motion Animations */}
-              <MotionConfig reducedMotion="user">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <AnimatePresence mode="popLayout">
-                    {visibleRoles.map((role, index) => (
+          <MotionConfig reducedMotion="user">
+            <AnimatePresence mode="wait">
+              {isFiltering ? (
+                // Skeleton state during filter / search transition
+                <motion.div
+                  key="skeleton-grid"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18, ease: "easeInOut" }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  {Array.from({ length: Math.min(BATCH_SIZE, filteredRoles.length || BATCH_SIZE) }).map((_, index) => (
+                    <div key={`filter-skeleton-${index}`} className="h-full">
+                      <RoleCardSkeleton />
+                    </div>
+                  ))}
+                </motion.div>
+              ) : filteredRoles.length > 0 ? (
+                <motion.div
+                  key="roles-grid"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="flex flex-col gap-8"
+                >
+                  {/* Card Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {visibleRoles.map((role) => (
                       <motion.div
                         key={role.id}
-                        layout
-                        initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.96 }}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{
-                          duration: 0.35,
-                          ease: [0.16, 1, 0.3, 1],
-                          delay: Math.min((index % BATCH_SIZE) * 0.05, 0.25),
+                          duration: 0.3,
+                          ease: "easeOut",
                         }}
                         whileHover={{ y: -4, transition: { duration: 0.2 } }}
                         className="h-full"
@@ -225,75 +261,72 @@ export function RoleExplorer() {
                         />
                       </motion.div>
                     ))}
-                  </AnimatePresence>
 
-                  {/* Skeleton placeholders when lazy-loading the next batch */}
-                  {isLoadingMore &&
-                    Array.from({ length: nextBatchCount || 2 }).map((_, index) => (
-                      <motion.div
-                        key={`lazy-skeleton-${index}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25, delay: index * 0.05 }}
-                        className="h-full"
-                      >
-                        <RoleCardSkeleton />
-                      </motion.div>
-                    ))}
-                </div>
-              </MotionConfig>
+                    {/* Skeleton placeholders when lazy-loading the next batch */}
+                    {isLoadingMore &&
+                      Array.from({ length: nextBatchCount || 2 }).map((_, index) => (
+                        <motion.div
+                          key={`lazy-skeleton-${index}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="h-full"
+                        >
+                          <RoleCardSkeleton />
+                        </motion.div>
+                      ))}
+                  </div>
 
-              {/* Lazy Load Sentinel & Manual Fallback Trigger */}
-              {hasMore && (
-                <div
-                  ref={observerTargetRef}
-                  className="py-6 flex flex-col items-center justify-center gap-3 text-center"
-                >
-                  {isLoadingMore ? (
-                    <Badge variant="outline" className="gap-2 px-4 py-2 text-xs font-medium">
-                      <Loader2 className="size-3.5 animate-spin text-primary" />
-                      <span>Memuat {nextBatchCount} peran berikutnya dengan lazy load...</span>
-                    </Badge>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLoadMore}
-                        className="gap-2"
-                      >
-                        <span>Muat Lebih Banyak Posisi (+{remainingCount} tersisa)</span>
-                      </Button>
-                      <span className="text-[11px] text-muted-foreground">
-                        Atau scroll ke bawah untuk memuat otomatis (Lazy Load)
-                      </span>
+                  {/* Lazy Load Sentinel & Manual Fallback Trigger */}
+                  {hasMore && (
+                    <div
+                      ref={observerTargetRef}
+                      className="py-6 flex flex-col items-center justify-center gap-3 text-center"
+                    >
+                      {isLoadingMore ? (
+                        <Badge variant="outline" className="gap-2 px-4 py-2 text-xs font-medium">
+                          <Loader2 className="size-3.5 animate-spin text-primary" />
+                          <span>Memuat {nextBatchCount} peran berikutnya dengan lazy load...</span>
+                        </Badge>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLoadMore}
+                            className="gap-2"
+                          >
+                            <span>Muat Lebih Banyak Posisi (+{remainingCount} tersisa)</span>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty-state"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  <EmptyState
+                    selectedDepartments={selectedDepartments}
+                    searchQuery={searchQuery}
+                    onResetFilters={handleResetFilters}
+                  />
+                </motion.div>
               )}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <EmptyState
-                selectedDepartment={selectedDepartment}
-                searchQuery={searchQuery}
-                onResetFilters={handleResetFilters}
-              />
-            </motion.div>
-          )}
+            </AnimatePresence>
+          </MotionConfig>
         </main>
       </div>
 
       {/* Role Details Modal */}
       <RoleDetailModal
-        key={activeModalRole?.id}
         role={activeModalRole}
         onClose={() => setActiveModalRole(null)}
       />
