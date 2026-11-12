@@ -1,98 +1,63 @@
-# Sekolah Karir — Role Explorer Component
 
-Assignment implementasi komponen filter peran (Role Explorer) interaktif, responsif, dan berbasis *practical product thinking* untuk **Sekolah Karir**.
+## Fitur Utama
 
----
-
-## 🎯 Ringkasan Brief & Deliverables
-
-> **Tugas:** Implement a responsive role-filter component from a simple wireframe: filter by department and show matching cards.
-> - Buat komponen role explorer yang responsive.
-> - User harus bisa memfilter role berdasarkan department.
-> - Tampilkan state default, hasil filter, dan empty state jika tidak ada hasil.
-> - Tidak perlu membuat backend; data boleh hardcoded/mock.
-
----
-
-## 💡 Product Reasoning & UX Decision Highlights
-
-Sesuai instruksi assignment bahwa penilaian berfokus pada **kualitas reasoning dan kemampuan mengeksekusi brief secara jelas**:
-
-1. **State Handling yang Lengkap & Transparan:**
-   - **Default State:** Saat pertama kali dimuat, tab *"Semua Departemen"* aktif dan menampilkan seluruh lowongan (10 posisi). Terdapat badge jumlah yang memberi visibilitas langsung mengenai total peluang karir yang tersedia.
-   - **Filtered State:** Mengklik departemen tertentu (misalnya *Engineering*, *Design*, *Product*) langsung memperbarui kartu lowongan yang ditampilkan secara reaktif, disertai counter kontekstual *(misal: "Menampilkan 3 posisi untuk Engineering")* dan tag filter aktif yang dapat dihapus per elemen.
-   - **Empty State & Easy Recovery:**
-     - Kami menambahkan departemen **"Legal & Compliance"** dengan 0 peran aktif secara sengaja pada mock data, sehingga reviewer dapat menguji tampilan **Empty State dengan 1 klik** tanpa harus mengetik apapun.
-     - Empty state juga dapat dipicu melalui pencarian kata kunci yang tidak ada (misal: `"Cybersecurity"` atau `"Dokter"`).
-     - Empty state menyajikan pesan kontekstual spesifik dan tombol tindakan primer **"Reset Semua Filter"** yang mengembalikan state ke default dalam sekali klik.
-
-2. **Hierarki Visual & Scannability Kartu:**
-   - Setiap kartu peran memprioritaskan informasi yang paling dicari job seeker:
-     - Badge warna departemen untuk identifikasi visual instan.
-     - Jenjang karir (*Internship, Junior, Mid-Level, Senior, Lead*) dan model kerja (*Remote, Hybrid, On-site*).
-     - Ringkasan deskripsi tugas (2-3 kalimat dengan batas tinggi konsisten).
-     - Chip keterampilan/teknologi utama (*React, Figma, SQL, dll.*).
-     - Estimasi rentang gaji kompetitif (*transparansi kompensasi*).
-     - Tombol **"Detail Peran"** interaktif yang membuka modal spesifikasi lengkap (tanggung jawab, persyaratan, dan aksi lamar).
-
-3. **Responsiveness & Aksesibilitas (A11y):**
-   - **Mobile (375px - 640px):** Filter tab berbentuk pill dengan scroll horizontal halus (`overflow-x-auto snap-x`), input pencarian full-width, dan kartu 1 kolom.
-   - **Tablet (768px):** Grid 2 kolom yang seimbang.
-   - **Desktop (1024px+):** Grid 3 kolom dengan spacing lapang.
-   - Menggunakan elemen semantik (`role="tab"`, `aria-selected`, `aria-modal`), keyboard shortcuts (tombol `Escape` untuk menutup modal detail), dan fokus yang jelas.
+- **Pencarian & Multi-Filter Real-time**:
+  - Pencarian berbasis kata kunci (judul posisi, ringkasan, dan keahlian/skills).
+  - Filter berdasarkan Departemen (Engineering, Product, Design, Data & AI, Marketing, People & Operations, dll).
+  - Filter Tingkat Pengalaman (*Internship*, *Junior*, *Mid-Level*, *Senior*, *Lead*).
+  - Filter Tipe Pekerjaan (*Full-time*, *Part-time*, *Contract*, *Internship*).
+  - Filter Model Kerja / Lokasi (*Remote*, *Hybrid*, *On-site*).
+- **Pengurutan (Sorting)**: Urutkan berdasarkan posisi terbaru (*Latest*), posisi terlama (*Oldest*), atau abjad (A-Z).
+- **Lazy Loading & Infinite Scroll (Pemuatan Bertahap Berkelanjutan)**:
+  - **Tujuan Performa**: Menghindari beban render berlebih pada DOM (*DOM bloat*) ketika dataset lowongan bertambah banyak, sehingga rendering tetap ringan dan mulus (60 FPS).
+  - **Mekanisme Batch Slicing**: Data awal yang ditampilkan dibatasi per kelompok (*batch* berukuran 6 item) menggunakan `visibleRoles = filteredRoles.slice(0, visibleCount)`.
+  - **Deteksi Otomatis (Intersection Observer API)**: Memanfaatkan native browser `IntersectionObserver` yang memantau elemen target (*sentinel ref*) di bagian bawah daftar. Begitu pengguna menggulir mendekati batas bawah (`rootMargin: "150px"`, `threshold: 0.1`), *batch* berikutnya otomatis dimuat tanpa mengharuskan pengguna menekan tombol.
+  - **Umpan Balik Visual (Loading Feedback)**: Dilengkapi animasi pemuatan (*loader spinner*) dan tombol manual cadangan (*fallback button*) jika pengguna lebih memilih memuat secara manual.
+  - **Smart Filter Reset**: Ketika pengguna mengubah kata kunci pencarian atau memilih kategori filter baru, `visibleCount` otomatis direset kembali ke ukuran batch awal (6 item) agar pengguna selalu mulai dari posisi teratas data yang relevan.
+- **Detail Posisi Interaktif (Modal)**: Menampilkan deskripsi lengkap, rentang gaji, tanggal posting, tanggung jawab (*responsibilities*), dan kualifikasi (*requirements*).
+- **Empty State Informatif**: Memberikan feedback yang jelas ketika tidak ada hasil yang cocok serta tombol untuk langsung mereset filter.
+- **Responsif & Mobile-Friendly**: Dilengkapi dengan drawer/sheet filter khusus untuk tampilan layar ponsel.
+- **Micro-interactions & UX**: Menggunakan animasi halus, skeleton loading state, dan tombol *Back to Top*.
 
 ---
 
-## 📁 Struktur Komponen & Kode
+## Struktur Direktori
 
 ```text
 my-app/
 ├── app/
-│   ├── globals.css         # Tailwind CSS styling
-│   ├── layout.tsx          # Metadata & font configuration
-│   └── page.tsx            # Halaman utama Sekolah Karir & ringkasan reasoning
+│   ├── globals.css          # Styling global & token warna Tailwind v4
+│   ├── layout.tsx           # Root layout HTML dan metadata
+│   └── page.tsx             # Halaman utama (entry point RoleExplorer)
 ├── components/
-│   ├── DepartmentFilter.tsx # Komponen tab filter departemen responsif + pill counts
-│   ├── RoleCard.tsx         # Kartu peran dengan hierarki visual & badge
-│   ├── RoleDetailModal.tsx  # Modal detail spesifikasi lengkap peran
-│   ├── EmptyState.tsx       # Komponen empty state dengan contextual message & recovery CTA
-│   └── RoleExplorer.tsx     # Komponen utama pengelola state & filter logic
+│   ├── ui/                  # Komponen UI dasar (Button, Card, Badge, Input, Select, dll)
+│   ├── BackToTop.tsx        # Tombol kembali ke atas dengan scroll listener
+│   ├── EmptyState.tsx       # Tampilan saat hasil pencarian/filter kosong
+│   ├── RoleCard.tsx         # Kartu informasi ringkas tiap role pekerjaan
+│   ├── RoleCardSkeleton.tsx # Efek loading placeholder (skeleton)
+│   ├── RoleDetailModal.tsx  # Pop-up dialog detail lengkap posisi
+│   ├── RoleExplorer.tsx     # Komponen utama: orchestrator state filter, search, & list
+│   └── RoleSidebar.tsx      # Panel navigasi filter (desktop sidebar & mobile drawer)
 ├── data/
-│   └── roles.ts             # Mock data realistis 10 peran dalam 7 departemen
-└── types/
-    └── role.ts              # TypeScript type definition (Department, Role, Level, dll.)
+│   └── roles.ts             # Dataset mock pekerjaan (lowongan realistis)
+├── types/
+│   └── role.ts              # Interface dan tipe data TypeScript (Role, Department, dll)
+└── package.json
 ```
 
 ---
 
-## 🚀 Cara Menjalankan Project
-
-1. Masuk ke direktori `my-app`:
-   ```bash
-   cd my-app
-   ```
-
-2. Jalankan server development:
-   ```bash
-   npm run dev
-   ```
-
-3. Buka browser pada [http://localhost:3000](http://localhost:3000).
-
-4. Untuk build production:
-   ```bash
-   npm run build
-   npm run start
-   ```
-
----
-
-## 🧪 Panduan Cepat Pengujian (Reviewer Guide)
-
-1. **Uji Default State:** Buka halaman; amati tab *"Semua Departemen"* aktif dengan total 10 kartu ditampilkan.
-2. **Uji Filter State:** Klik pill *"Engineering"* (menampilkan 3 kartu), *"Product"* (menampilkan 2 kartu), atau *"Design"* (menampilkan 2 kartu).
-3. **Uji Empty State:**
-   - **Cara 1 (1 Klik):** Klik pill *"Legal & Compliance (0)"*. Empty state langsung muncul lengkap dengan pesan penjelasan dan tombol *"Reset Semua Filter"*.
-   - **Cara 2 (Search):** Ketik kata kunci acak pada kolom pencarian (misal `"xyz"`).
-4. **Uji Reset Action:** Klik tombol *"Reset Semua Filter"* pada empty state atau tag filter aktif. Halaman kembali ke Default State.
-5. **Uji Detail Modal:** Klik tombol *"Detail Peran"* pada salah satu kartu peran untuk melihat deskripsi mendalam, tanggung jawab, dan kualifikasi. Tekan tombol `Esc` atau tombol silang untuk menutup.
+## Penggunaan Tool AI 
+### 1. Bagaimana Tool AI Membantu Pengembangan
+- **Perancangan Tipe Data & Struktur (Scaffolding)**:
+  - Membantu menyusun kontrak data TypeScript yang ketat pada `types/role.ts` sehingga data lowongan konsisten dan minim kesalahan tipe (*type safety*).
+- **Logika Filter & Pencarian Multi-Kondisi**:
+  - Membantu merancang fungsi penyaringan pada `RoleExplorer.tsx` yang efisien menggabungkan query teks, filter kategori berganda (*multi-faceted filtering*), dan fungsi pengurutan (*sorting*).
+- **Implementasi Lazy Loading & Intersection Observer**:
+  - Membantu menyusun arsitektur pemuatan data bertahap (*batching*) berbasis `IntersectionObserver`, mengelola state pembersihan memori (*cleanup listener*), serta penanganan transisi pemuatan saat filter berubah.
+- **Akselerasi Pembuatan Komponen UI & Desain Sistem**:
+  - Mengimplementasikan antarmuka modern yang konsisten menggunakan Tailwind CSS v4 dan komponen modular yang rapi (pemisahan antara `RoleSidebar`, `RoleCard`, `RoleDetailModal`, dan `EmptyState`).
+- **Penanganan Edge Cases & UX**:
+  - Membantu menyusun interaksi ramah pengguna, seperti penyediaan *skeleton loading*, penanganan *empty state* dengan opsi *clear filters*, hingga aksesibilitas modal (penutupan via tombol Escape / klik backdrop).
+- **Refactoring & Clean Code**:
+  - Memastikan pemisahan tanggung jawab komponen (*single-responsibility principle*) dan kode yang mudah dibaca.
